@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:amq="http://activemq.apache.org/schema/core"
+	xmlns:jms="http://www.springframework.org/schema/jms"
+	 xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans   
+        http://www.springframework.org/schema/beans/spring-beans-4.0.xsd   
+        http://www.springframework.org/schema/context   
+        http://www.springframework.org/schema/context/spring-context-4.0.xsd
+        http://www.springframework.org/schema/jms
+        http://www.springframework.org/schema/jms/spring-jms-4.0.xsd
+        http://www.springframework.org/schema/tx 
+        http://www.springframework.org/schema/tx/spring-tx-4.0.xsd
+        http://activemq.apache.org/schema/core
+        http://activemq.apache.org/schema/core/activemq-core-5.8.0.xsd">
+        
+  
+   <!-- jms事务管理 -->
+   <bean id="jmsTransactionManager" class="org.springframework.jms.connection.JmsTransactionManager">
+   		<property name="connectionFactory" ref="targetConnectionFactory" />
+   </bean>
+   
+   <!-- 设置jms事务 自动注入 -->
+   <tx:annotation-driven transaction-manager="jmsTransactionManager" />
+        
+   <!-- 真正可以产生Connection的ConnectionFactory，由对应的 JMS服务厂商提供-->  
+   <bean id="targetConnectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory">
+   	<property name="brokerURL" value="tcp://127.0.0.1:61616" />
+   	<!-- This class is not trusted to be serialized as ObjectMessage payload. -->
+   	<property name="trustAllPackages" value="true"></property>
+   </bean>     
+        
+   <!-- 设置发送连接池,提高性能 -->
+	<bean id="jmsFactory" class="org.apache.activemq.pool.PooledConnectionFactory" primary="true" destroy-method="stop">
+	    <property name="connectionFactory" ref="targetConnectionFactory"></property>
+   </bean>
+   
+   <!-- Spring JMS Template -->
+   <bean id="jmsTemplate" class="org.springframework.jms.core.JmsTemplate">
+   	<property name="connectionFactory" ref="jmsFactory" />
+   	<property name="explicitQosEnabled" value="true" />
+   	<!-- deliveryMode, priority, timeToLive 的开关，要生效，必须配置为true，默认false--> 
+    <property name="deliveryMode" value="1" /> 
+     <!-- 发送模式  DeliveryMode.NON_PERSISTENT=1:非持久 ; DeliveryMode.PERSISTENT=2:持久-->
+     <property name="pubSubDomain" value="false" />
+     <property name="messageConverter" ref="WXMessageConverter" />
+   </bean>
+   
+   <!-- 发送消息的目的地（一个队列）[主题消息]  -->
+   <bean id="destination" class="org.apache.activemq.command.ActiveMQTopic">
+   	<!-- 设置队列的名字 -->
+   	<constructor-arg index="0" value="subject"></constructor-arg>
+   </bean>
+   
+   <!-- 用于测试消息监听适配器的队列目的地  [队列消息] -->
+   <bean id="adapterQueue" class="org.apache.activemq.command.ActiveMQQueue">
+   	<constructor-arg>
+   		<value>adapterQueue</value>
+   	</constructor-arg>
+   </bean>
+   	
+   	<!-- 启动监听接收消息bean -->
+   	<bean id="consumerListener" class="org.zt.ccty.springboot_mybatis_demo.message.ConsumerListener" />
+   	
+   	<!-- [主题消息] 消息监听器的监听容器 -->
+    <bean id="consumerListenerContainer" class="org.springframework.jms.listener.DefaultMessageListenerContainer">
+    	<!-- 设置jms工厂 -->
+    	<property name="connectionFactory" ref="jmsFactory" />
+    	<!-- 设置主题消息的目的 -->
+    	<property name="destination" ref="destination" />
+    	<!-- 设置监听消息的消费者 -->
+    	<property name="messageListener" ref="consumerListener" />
+    	<!-- 配置jms事务 -->
+    	
+    	<!-- <property name="sessionTransacted" value="true"/> -->  
+    	<!-- 给listener添加事务，只负责接收消息的回滚 （有了transactionManager就不用这个了，这个功能不全） 设置后好像并没有起作用 不知道为啥 -->  
+        <!-- <property name="transactionManager" ref="jtaTransactionManager"/> --> 
+        <!-- 接收消息和数据库访问处于同一事务中 jta --> 
+    	
+    	<property name="transactionManager" ref="jmsTransactionManager" />
+    	<!-- 配置应答模式 -->
+    	<property name="sessionAcknowledgeMode" value="4" />
+    	 <!-- ActiveMQ:设置多个并行的消费者 -->
+    	 <property name="concurrency" value="3-4" />
+    </bean>
+    
+    <!-- [队列消息] 消息监听适配器对应的监听容器 -->
+    <bean id="messageListenerAdapterContainer" class="org.springframework.jms.listener.DefaultMessageListenerContainer">
+    	<property name="connectionFactory" ref="jmsFactory"/>
+    	<property name="destination" ref="adapterQueue" />
+    	<property name="messageListener" ref="messageListenerAdapter" />
+    </bean>
+    
+    <!-- 消息监听适配器 -->
+    <bean id="messageListenerAdapter" class="org.springframework.jms.listener.adapter.MessageListenerAdapter">
+    	<property name="delegate">
+    		<bean class="org.zt.ccty.springboot_mybatis_demo.message.ConsumerListener" />
+    	</property>
+    	<!-- 和上面的property同效果 --><!-- <property name="delegate" ref="consumerListener" /> -->
+    	<!-- <property name="defaultMethodListener" value="receiveMessage" /> -->
+    	<property name="defaultListenerMethod" value="receiveMessage" />				
+    	<property name="messageConverter" ref="WXMessageConverter" />
+    </bean>
+    
+    <!-- 定义消息转换器bean -->
+    <bean id="WXMessageConverter" class="org.zt.ccty.springboot_mybatis_demo.message.WXMessageConverter"/>
+    
+</beans>

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:aop="http://www.springframework.org/schema/aop" xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+	http://www.springframework.org/schema/beans/spring-beans-3.0.xsd http://www.springframework.org/schema/context
+	http://www.springframework.org/schema/context/spring-context-3.0.xsd http://www.springframework.org/schema/tx
+	http://www.springframework.org/schema/tx/spring-tx-3.0.xsd http://www.springframework.org/schema/aop
+	http://www.springframework.org/schema/aop/spring-aop-3.0.xsd">
+	
+	<!-- # not used just an example -->
+	<!-- 说明：这是一个springboot项目，尽量使用零xml配置。org.zt.ccty.springboot_mybatis_demo.quartz包下面的三个方法，
+	             实现了spring-quartz.xml和quartz.properties的内容  -->
+
+	<!-- 设置任务调度com.task.CachedDataTask  -->
+	<!-- 如果一个bean只配置了name属性，但是没有配置ID属性，默认会ID属性=name属性
+		 name定义的是bean的alias，可以有多个，并可能与其他的bean重名。
+		 对于上面的两个bean配置，最后会出现两个ID属性都是“hello”的bean，最后的bean会覆盖前面的bean。 -->
+    <bean name="cachedDataTask"  
+        class="org.springframework.scheduling.quartz.JobDetailBean">  
+        <property name="jobClass" value="com.task.CachedDataTask" />  
+    </bean>  
+  
+    <!-- 触发器 -->  
+    <bean id="cronTrigger"  
+        class="org.springframework.scheduling.quartz.CronTriggerBean">  
+        <!-- 指向我们的任务 
+        这里的ref  就是指向 <bean name="cachedDataTask" 
+        类似java config中的 public CronTriggerFactoryBean cronJobTrigger(MethodInvokingJobDetailFactoryBean jobDetail)   -->  
+        <property name="jobDetail" ref="cachedDataTask" />  
+        <!--  每天下午16点50分到55分,每分钟运行一次 -->  
+        <property name="cronExpression" value="${jobtime}" />  
+    </bean>  
+  
+    <!-- 调度器  -->  
+    <bean class="org.springframework.scheduling.quartz.SchedulerFactoryBean">  
+        <property name="triggers">  
+            <list>  
+                <!--  触发器列表 -->  
+                <ref bean="cronTrigger" />  
+            </list>  
+        </property>
+    </bean>  
+</beans>

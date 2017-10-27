@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.zt.ccty.springboot_mybatis_demo.dao.IntegralDao">
+ 
+  <select id="getIntegralInfoById" resultType="org.zt.ccty.springboot_mybatis_demo.model.UserIntegral">
+    select * from t_integral where id= #{id}
+  </select>
+  
+  <select id="getIntegralInfoByUid" resultType="org.zt.ccty.springboot_mybatis_demo.model.UserIntegral">
+    select * from t_integral where uid= #{uid}
+  </select>
+  
+   <insert id="saveIntegral" parameterType="org.zt.ccty.springboot_mybatis_demo.model.UserIntegral">
+  	INSERT INTO
+  		t_integral
+  		(uid,integral,description)
+  	VALUES
+  		(#{uid},#{integral},#{description})
+  </insert>
+  
+  <update id="updateIntegral" parameterType="org.zt.ccty.springboot_mybatis_demo.model.UserIntegral" >
+       UPDATE 
+       		t_integral 
+       SET 
+       	<if test="integral != null">integral = #{integral},</if>
+       	<if test="description != null">description = #{description}</if>
+       WHERE 
+       		uid = #{uid}
+    </update>
+  
+  
+</mapper>

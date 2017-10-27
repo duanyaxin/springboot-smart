@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.zt.ccty.springboot_mybatis_demo.dao.UserDAO">
+ 
+ <select id="getUserInfo" resultType="org.zt.ccty.springboot_mybatis_demo.model.User">
+    select * from t_users
+  </select>
+ <select id="getUserInfoById" resultType="org.zt.ccty.springboot_mybatis_demo.model.User">
+    select * from t_users where id= #{id}
+  </select>
+  
+  <select id="getUserInfoByName" resultType="org.zt.ccty.springboot_mybatis_demo.model.User">
+  	select * from t_users where name=#{name}
+  </select>
+  
+  <select id="getUserInfoByNameAndPwd" resultType="org.zt.ccty.springboot_mybatis_demo.model.User">
+  	select * from t_users where name=#{name} and password=#{password}
+  </select>
+  
+  <insert id="insertUser" parameterType="org.zt.ccty.springboot_mybatis_demo.model.User">
+  	INSERT INTO
+  		t_users
+  		(name,sex,age,phone,password)
+  	VALUES
+  		(#{name},#{sex},#{age},#{phone},#{password})
+  </insert>
+  
+  <update id="updateUser" parameterType="org.zt.ccty.springboot_mybatis_demo.model.User" >
+       UPDATE 
+       		t_users 
+       SET 
+       	<if test="name != null">name = #{name},</if>
+       	<if test="sex != null">sex = #{sex},</if>
+       	age = #{age},
+       	<if test="phone != null">phone = #{phone},</if>
+       	<if test="password != null">password = #{password}</if>
+       WHERE 
+       		id = #{id}
+    </update>
+    
+    <delete id="deleteUser" parameterType="java.lang.Integer" >
+       DELETE FROM
+       		 t_users 
+       WHERE 
+       		 id =#{id}
+    </delete>
+  
+ 
+  
+  
+</mapper>

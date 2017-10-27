@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.zt.ccty.springboot_mybatis_demo.dao.CountryDao">
+ 
+  <select id="getCountryInfo" resultType="org.zt.ccty.springboot_mybatis_demo.model.Country">
+    select * from t_country
+  </select>
+ <select id="getCountryInfoById" resultType="org.zt.ccty.springboot_mybatis_demo.model.Country">
+    select * from t_country where id= #{id}
+  </select>
+  <insert id="insertCountry" parameterType="org.zt.ccty.springboot_mybatis_demo.model.Country">
+  	INSERT INTO
+  		t_country
+  		(code,name,description)
+  	VALUES
+  		(#{code},#{name},#{description})
+  </insert>
+  
+  <update id="updateCountry" parameterType="org.zt.ccty.springboot_mybatis_demo.model.Country" >
+       UPDATE 
+       		t_country
+       SET 
+       	<if test="code != null">code = #{code},</if>
+       	<if test="name != null">name = #{name},</if>
+       	<if test="description != null">description = #{description}</if>
+       WHERE 
+       		id = #{id}
+    </update>
+    
+    <delete id="deleteCountry" parameterType="java.lang.Integer" >
+       DELETE FROM
+       		 t_country
+       WHERE 
+       		 id =#{id}
+    </delete>
+  
+</mapper>

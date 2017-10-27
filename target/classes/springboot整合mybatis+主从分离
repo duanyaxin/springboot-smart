@@ -1,0 +1,11 @@
+springboot整合mybatis
+springboot 微服务架构
+swagger2 对于controller自动生成rest api  http://localhost:9090/swagger2-ui.html
+mybatis  数据库主从分离
+redis缓存技术
+activemq 集群
+quartz任务调度
+**dubbo分布式
+**elasticsearch
+**mongodb存取session
+springboot Mail
